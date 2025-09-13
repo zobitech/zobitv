@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Channel Selector</title>
+  <title>Live TV</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -14,18 +14,13 @@
       flex-direction: column;
       align-items: center;
     }
-    h1 {
-      margin-bottom: 15px;
-      color: #004080;
-      font-weight: 600;
-      font-size: 20px;
-    }
     #channel-grid {
       display: grid;
       width: 100%;
       max-width: 1000px;
       gap: 10px;
       grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      margin-top: 15px;
     }
     .channel-card {
       border: 1px solid #007BFF;
@@ -53,6 +48,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      background: #fff;
     }
     .channel-logo {
       width: 100%;
@@ -72,17 +68,50 @@
       margin-top: 15px;
       font-size: 14px;
     }
-
+    /* Player container */
+    #player-container {
+      width: 100%;
+      max-width: 900px;
+    }
+    .responsive-player {
+      position: relative;
+      padding-bottom: 56.25%; /* 16:9 */
+      height: 0;
+      overflow: hidden;
+    }
+    .responsive-player iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
     /* Force 3 columns on small screens */
     @media (max-width: 600px) {
       #channel-grid {
         grid-template-columns: repeat(3, 1fr);
       }
+      .logo-circle {
+        width: 50px;
+        height: 50px;
+      }
+      .channel-name {
+        font-size: 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Channel Selector</h1>
+
+  <!-- Player at the top -->
+  <div id="player-container">
+    <div class="responsive-player">
+      <iframe id="hls-player" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Channel grid -->
   <div id="channel-grid"></div>
   <div id="error-message"></div>
 
@@ -90,6 +119,7 @@
     const apiUrl = 'https://raw.githubusercontent.com/abusaeeidx/CricHd-playlists-Auto-Update-permanent/main/api.json';
     const channelGrid = document.getElementById('channel-grid');
     const errorMessage = document.getElementById('error-message');
+    const playerFrame = document.getElementById('hls-player');
 
     function openStream(url) {
       if (!url) {
@@ -98,8 +128,7 @@
       }
       errorMessage.textContent = '';
       const encodedUrl = encodeURIComponent(url);
-      const playerUrl = `https://zobitech.github.io/p2?url=${encodedUrl}`;
-      window.open(playerUrl, '_blank');
+      playerFrame.src = `https://zobitech.github.io/p2?url=${encodedUrl}`;
     }
 
     async function fetchChannels() {
@@ -109,7 +138,7 @@
         const channels = await resp.json();
         if (!Array.isArray(channels)) throw new Error('Invalid data: not an array');
 
-        channels.forEach(ch => {
+        channels.forEach((ch, index) => {
           const card = document.createElement('div');
           card.className = 'channel-card';
           card.onclick = () => openStream(ch.link);
@@ -131,6 +160,11 @@
           card.appendChild(circle);
           card.appendChild(name);
           channelGrid.appendChild(card);
+
+          // Auto-play the first channel on load
+          if (index === 0) {
+            openStream(ch.link);
+          }
         });
       } catch (err) {
         console.error('Fetch error', err);
