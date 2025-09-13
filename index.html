@@ -24,7 +24,7 @@
     }
     .channel-card {
       border: 1px solid #007BFF;
-      border-radius: 0; /* sharp edges */
+      border-radius: 0;
       padding: 8px 5px;
       display: flex;
       flex-direction: column;
@@ -68,14 +68,13 @@
       margin-top: 15px;
       font-size: 14px;
     }
-    /* Player container */
     #player-container {
       width: 100%;
       max-width: 900px;
     }
     .responsive-player {
       position: relative;
-      padding-bottom: 56.25%; /* 16:9 */
+      padding-bottom: 56.25%;
       height: 0;
       overflow: hidden;
     }
@@ -87,7 +86,6 @@
       height: 100%;
       border: 0;
     }
-    /* Force 3 columns on small screens */
     @media (max-width: 600px) {
       #channel-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -128,7 +126,10 @@
       }
       errorMessage.textContent = '';
       const encodedUrl = encodeURIComponent(url);
-      playerFrame.src = `https://zobitech.github.io/p2?url=${encodedUrl}`;
+
+      // Use your iframe method
+      playerFrame.src =
+        `https://anym3u8player.com/ultimate-player-generator/player.php?player=mediaelement&url=${encodedUrl}&autoplay=1&controls=auto&theme=default&buffer=30&quality=1&speed=1&pip=1&fullscreen=1&no_download=1&width=responsive&aspect=16:9`;
     }
 
     async function fetchChannels() {
@@ -161,7 +162,7 @@
           card.appendChild(name);
           channelGrid.appendChild(card);
 
-          // Auto-play the first channel on load
+          // Auto-play first channel
           if (index === 0) {
             openStream(ch.link);
           }
