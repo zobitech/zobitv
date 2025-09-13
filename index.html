@@ -14,6 +14,7 @@
       flex-direction: column;
       align-items: center;
     }
+
     #channel-grid {
       display: grid;
       width: 100%;
@@ -22,6 +23,7 @@
       grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
       margin-top: 15px;
     }
+
     .channel-card {
       border: 1px solid #007BFF;
       border-radius: 0;
@@ -34,10 +36,12 @@
       background: #fff;
       transition: transform 0.2s, box-shadow 0.2s;
     }
+
     .channel-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
+
     .logo-circle {
       border: 1px solid #007BFF;
       border-radius: 50%;
@@ -50,12 +54,14 @@
       justify-content: center;
       background: #fff;
     }
+
     .channel-logo {
       width: 100%;
       height: 100%;
       object-fit: cover;
       border-radius: 50%;
     }
+
     .channel-name {
       font-size: 11px;
       font-weight: 500;
@@ -63,21 +69,25 @@
       text-align: center;
       line-height: 1.2;
     }
+
     #error-message {
       color: red;
       margin-top: 15px;
       font-size: 14px;
     }
+
     #player-container {
       width: 100%;
       max-width: 900px;
     }
+
     .responsive-player {
       position: relative;
-      padding-bottom: 56.25%;
+      padding-bottom: 56.25%; /* 16:9 */
       height: 0;
       overflow: hidden;
     }
+
     .responsive-player iframe {
       position: absolute;
       top: 0;
@@ -86,6 +96,7 @@
       height: 100%;
       border: 0;
     }
+
     @media (max-width: 600px) {
       #channel-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -127,9 +138,8 @@
       errorMessage.textContent = '';
       const encodedUrl = encodeURIComponent(url);
 
-      // Use your iframe method
-      playerFrame.src =
-        `https://anym3u8player.com/ultimate-player-generator/player.php?player=mediaelement&url=${encodedUrl}&autoplay=1&controls=auto&theme=default&buffer=30&quality=1&speed=1&pip=1&fullscreen=1&no_download=1&width=responsive&aspect=16:9`;
+      // Video.js player iframe
+      playerFrame.src = `https://anym3u8player.com/ultimate-player-generator/player.php?player=videojs&url=${encodedUrl}&autoplay=1&controls=auto&theme=default&buffer=30&quality=1&speed=1&pip=1&fullscreen=1&no_download=1&width=responsive&aspect=16:9`;
     }
 
     async function fetchChannels() {
