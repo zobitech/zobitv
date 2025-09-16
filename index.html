@@ -13,18 +13,16 @@
       background: #f9fbff;
       display: flex;
       flex-direction: column;
+      overflow: hidden; /* Prevent scrolling on the body */
     }
 
+    /* Player with fixed 16:9 aspect ratio in portrait */
     #player-container {
       width: 100%;
+      position: relative;
+      aspect-ratio: 16 / 9;
       flex-shrink: 0;
-      position: relative;
-    }
-
-    .responsive-player {
-      width: 100%;
-      height: 40vh; /* Player takes 40% of screen height */
-      position: relative;
+      background-color: #000;
     }
 
     .responsive-player iframe {
@@ -36,15 +34,18 @@
       border: 0;
     }
 
+    /* Channel grid fills rest of screen (portrait mode) */
     #channel-grid {
-      display: grid;
       width: 100%;
       max-width: 1000px;
+      margin: 0 auto;
+      padding: 10px;
+      display: grid;
       gap: 10px;
       grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      margin: 10px auto;
       overflow-y: auto;
-      flex: 1; /* Takes remaining space */
+      flex: 1; /* take remaining space */
+      box-sizing: border-box;
     }
 
     .channel-card {
@@ -57,6 +58,7 @@
       cursor: pointer;
       background: #fff;
       transition: transform 0.2s, box-shadow 0.2s;
+      border-radius: 8px;
     }
 
     .channel-card:hover {
@@ -80,7 +82,7 @@
     .channel-logo {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       border-radius: 50%;
     }
 
@@ -94,7 +96,7 @@
 
     #error-message {
       color: red;
-      margin-top: 5px;
+      padding: 10px;
       font-size: 14px;
       text-align: center;
     }
@@ -102,6 +104,8 @@
     @media (max-width: 600px) {
       #channel-grid {
         grid-template-columns: repeat(3, 1fr);
+        padding: 8px;
+        gap: 8px;
       }
       .logo-circle {
         width: 50px;
@@ -110,33 +114,52 @@
       .channel-name {
         font-size: 10px;
       }
-      .responsive-player {
-        height: 35vh; /* slightly smaller on small screens */
-      }
     }
 
+    /* Landscape mode → player left, single column channel list on right */
     @media (orientation: landscape) {
-      .responsive-player {
-        height: 60vh; /* player larger in landscape */
+      body {
+        flex-direction: row; /* Arrange side by side */
+      }
+
+      #player-container {
+        flex: 2; /* Player takes 2/3 */
+        width: auto;
+        height: 100vh; /* Fill full height */
+        aspect-ratio: auto; /* Ignore aspect ratio */
+      }
+
+      #channel-grid {
+        display: flex;
+        flex-direction: column; /* Vertical list */
+        flex: 1; /* Take 1/3 of screen */
+        max-width: 300px;
+        height: 100vh; /* Full height */
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 10px;
+      }
+
+      .channel-card {
+        flex: 0 0 auto;
+        width: 100%; /* Full width in column */
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Player at the top -->
   <div id="player-container">
     <div class="responsive-player">
-      <iframe id="hls-player" allowfullscreen></iframe>
+      <iframe id="hls-player" allow="autoplay; picture-in-picture" allowfullscreen sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>
     </div>
   </div>
 
-  <!-- Channel grid -->
   <div id="channel-grid"></div>
   <div id="error-message"></div>
 
   <script>
-    const apiUrl = 'https://raw.githubusercontent.com/abusaeeidx/CricHd-playlists-Auto-Update-permanent/refs/heads/main/api.json';
+    const apiUrl = 'https://raw.githubusercontent.com/abusaeeidx/CricHd-playlists-Auto-Update-permanent/main/api.json';
     const channelGrid = document.getElementById('channel-grid');
     const errorMessage = document.getElementById('error-message');
     const playerFrame = document.getElementById('hls-player');
@@ -149,15 +172,19 @@
       errorMessage.textContent = '';
       const encodedUrl = encodeURIComponent(url);
 
-      playerFrame.src = `https://zobitvv.github.io/Jplayer/?url=${encodedUrl}&autoplay=1&controls=auto&theme=default&buffer=30&quality=1&speed=1&pip=1&fullscreen=1&no_download=1&width=responsive&aspect=16:9`;
+      // Player URL with optimized settings
+      playerFrame.src = `https://zobitvv.github.io/vjs?url=${encodedUrl}&autoplay=1&logo=1&logo_url=https%3A%2F%2Fi.postimg.cc%2FWbysthbb%2Fimage-removebg-preview.png&logo_pos=top-right&buffer=20&quality=1&speed=1&pip=1&no_download=1&fullscreen=1`;
     }
 
     async function fetchChannels() {
       try {
         const resp = await fetch(apiUrl);
         if (!resp.ok) throw new Error('Network error: ' + resp.status);
+        
         const channels = await resp.json();
-        if (!Array.isArray(channels)) throw new Error('Invalid data: not an array');
+        if (!Array.isArray(channels)) throw new Error('Invalid data format');
+
+        channelGrid.innerHTML = ''; 
 
         channels.forEach((ch, index) => {
           const card = document.createElement('div');
@@ -171,24 +198,27 @@
           logo.className = 'channel-logo';
           logo.alt = ch.name || 'Channel';
           logo.src = ch.logo || 'https://via.placeholder.com/60?text=No+Logo';
+          logo.onerror = function() {
+            this.src = 'https://via.placeholder.com/60?text=No+Logo';
+          };
 
           circle.appendChild(logo);
 
           const name = document.createElement('div');
           name.className = 'channel-name';
-          name.textContent = ch.name || 'Unnamed';
+          name.textContent = ch.name || 'Unnamed Channel';
 
           card.appendChild(circle);
           card.appendChild(name);
           channelGrid.appendChild(card);
 
-          // Auto-play first channel
-          if (index === 0) {
+          if (index === 0 && ch.link) {
             openStream(ch.link);
           }
         });
+
       } catch (err) {
-        console.error('Fetch error', err);
+        console.error('Fetch error:', err);
         errorMessage.textContent = 'Could not load channels: ' + err.message;
       }
     }
